@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>Autores</title>
+    <link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+    <main>
+        <header>
+            <h1>Autores</h1>
+
+            <button id="novo-autor">
+                Novo autor
+            </button>
+        </header>
+
+        <section>
+            <h2>Autores cadastrados</h2>
+            <div id="lista-autores"></div>
+        </section>
+    </main>
+
+    <dialog id="modal-autor">
+        <form id="form-autor">
+            <h2 id="titulo-formulario">
+                Novo autor
+            </h2>
+
+            <input
+                type="hidden"
+                id="autor-id"
+            >
+
+            <label for="autor-nome">
+                Nome
+            </label>
+
+            <input
+                type="text"
+                id="autor-nome"
+                name="nome"
+                required
+            >
+
+            <label for="autor-email">
+                E-mail
+            </label>
+
+            <input
+                type="email"
+                id="autor-email"
+                name="email"
+                required
+            >
+
+            <div class="acoes">
+                <button
+                    type="button"
+                    id="cancelar-autor"
+                >
+                    Cancelar
+                </button>
+
+                <button type="submit">
+                    Salvar
+                </button>
+            </div>
+        </form>
+    </dialog>
+
+    <script
+        type="module"
+        src="js/autores.js"
+    ></script>
+</body>
+</html>

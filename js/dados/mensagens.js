@@ -1,21 +1,55 @@
 import { Mensagem } from "../classes/Mensagem.js";
-import {
-    MensagemOculta
-} from "../classes/MensagemOculta.js";
+import { autores } from "./autores.js";
 
-export const mensagens = [
-    new Mensagem(
-        "Hello World!",
-        "Ana"
-    ),
+const chave = "mensagens";
 
-    new Mensagem(
-        "Aprendendo JavaScript!",
-        "Carlos"
-    ),
+function carregarMensagens() {
+    const texto =
+        localStorage.getItem(chave);
 
-    new MensagemOculta(
-        "Esta mensagem está oculta.",
-        "João"
-    )
-];
+    if (!texto) {
+        return [];
+    }
+
+    const dados = JSON.parse(texto);
+
+    return dados
+        .map((dadosMensagem) => {
+            const autor = autores.find(
+                (autor) =>
+                    autor.id == dadosMensagem.autorId
+            );
+
+            if (!autor) {
+                return null;
+            }
+
+            return new Mensagem(
+                dadosMensagem.texto,
+                autor
+            );
+        })
+        .filter(
+            (mensagem) => mensagem !== null
+        );
+}
+
+export const mensagens =
+    carregarMensagens();
+
+export function salvarMensagens() {
+    const dados = mensagens.map(
+        (mensagem) => {
+            return {
+                id: mensagem.id,
+                texto: mensagem.texto,
+                autorId: mensagem.autor.id
+            };
+        }
+    );
+
+    localStorage.setItem(
+        chave,
+        JSON.stringify(dados)
+    );
+}

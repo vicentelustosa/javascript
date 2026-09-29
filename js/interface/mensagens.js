@@ -1,5 +1,10 @@
+import {
+    mensagens,
+    salvarMensagens
+} from "../dados/mensagens.js";
+
+import { autores } from "../dados/autores.js";
 import { Mensagem } from "../classes/Mensagem.js";
-import { mensagens } from "../dados/mensagens.js";
 
 const lista =
     document.querySelector("#lista-mensagens");
@@ -19,11 +24,40 @@ const campoId =
 const campoTexto =
     document.querySelector("#mensagem-texto");
 
+const campoAutor =
+    document.querySelector("#autor");
+
 const botaoNovaMensagem =
     document.querySelector("#nova-mensagem");
 
 const botaoCancelar =
     document.querySelector("#cancelar-mensagem");
+
+function carregarAutores() {
+    campoAutor.innerHTML = "";
+
+    const opcaoInicial =
+        document.createElement("option");
+
+    opcaoInicial.value = "";
+    opcaoInicial.textContent =
+        "Selecione um autor";
+
+    opcaoInicial.disabled = true;
+    opcaoInicial.selected = true;
+
+    campoAutor.append(opcaoInicial);
+
+    autores.forEach((autor) => {
+        const opcao =
+            document.createElement("option");
+
+        opcao.value = autor.id;
+        opcao.textContent = autor.nome;
+
+        campoAutor.append(opcao);
+    });
+}
 
 function criarMensagens() {
     lista.innerHTML = "";
@@ -50,15 +84,28 @@ function criarMensagens() {
             );
         }
 
-        botaoExcluir.addEventListener(
-            "click",
-            () => {
-                excluirMensagem(mensagem.id);
-            }
-        );
+        if (botaoExcluir) {
+            botaoExcluir.addEventListener(
+                "click",
+                () => {
+                    excluirMensagem(mensagem.id);
+                }
+            );
+        }
 
         lista.append(item);
     }
+}
+
+function abrirFormularioNovaMensagem() {
+    tituloFormulario.textContent =
+        "Nova mensagem";
+
+    campoId.value = "";
+    campoTexto.value = "";
+    campoAutor.value = "";
+
+    modal.showModal();
 }
 
 function abrirFormularioAlteracao(mensagem) {
@@ -67,43 +114,57 @@ function abrirFormularioAlteracao(mensagem) {
 
     campoId.value = mensagem.id;
     campoTexto.value = mensagem.texto;
+    campoAutor.value = mensagem.autor.id;
 
     modal.showModal();
 }
 
-function criarMensagem(novoTexto) {
+function criarMensagem(
+    novoTexto,
+    autor
+) {
     const mensagem = new Mensagem(
         novoTexto,
-        "Usuário"
+        autor
     );
 
     mensagens.push(mensagem);
+    salvarMensagens();
 
     criarMensagens();
 }
 
-function alterarMensagem(id, novoTexto) {
+function alterarMensagem(
+    id,
+    novoTexto,
+    autor
+) {
     const mensagem = mensagens.find(
-        mensagem => mensagem.id == id
+        (mensagem) => mensagem.id == id
     );
+
+    if (!mensagem) {
+        return;
+    }
 
     mensagem.texto = novoTexto;
+    mensagem.autor = autor;
 
-    const item = document.querySelector(
-        `.mensagem[data-id="${id}"]`
-    );
-
-    const paragrafo = item.querySelector("p");
-
-    paragrafo.textContent = novoTexto;
+    salvarMensagens();
+    criarMensagens();
 }
 
 function excluirMensagem(id) {
     const indice = mensagens.findIndex(
-        mensagem => mensagem.id == id
+        (mensagem) => mensagem.id == id
     );
 
+    if (indice === -1) {
+        return;
+    }
+
     mensagens.splice(indice, 1);
+    salvarMensagens();
 
     criarMensagens();
 }
@@ -111,30 +172,40 @@ function excluirMensagem(id) {
 botaoNovaMensagem.addEventListener(
     "click",
     () => {
-        tituloFormulario.textContent =
-            "Nova mensagem";
-
-        campoId.value = "";
-        campoTexto.value = "";
-
-        modal.showModal();
+        abrirFormularioNovaMensagem();
     }
 );
 
 formulario.addEventListener(
     "submit",
-    evento => {
+    (evento) => {
         evento.preventDefault();
 
         const id = campoId.value;
         const novoTexto = campoTexto.value;
 
-        if (id) {
-            alterarMensagem(id, novoTexto);
-        } else {
-            criarMensagem(novoTexto);
+        const autor = autores.find(
+            (autor) => autor.id == campoAutor.value
+        );
+
+        if (!autor) {
+            return;
         }
 
+        if (id) {
+            alterarMensagem(
+                id,
+                novoTexto,
+                autor
+            );
+        } else {
+            criarMensagem(
+                novoTexto,
+                autor
+            );
+        }
+
+        formulario.reset();
         modal.close();
     }
 );
@@ -146,6 +217,7 @@ botaoCancelar.addEventListener(
     }
 );
 
-export function iniciarMensagens() {
+export function inicializar() {
+    carregarAutores();
     criarMensagens();
 }

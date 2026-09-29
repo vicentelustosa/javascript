@@ -5,8 +5,17 @@ export class Mensagem {
     #texto;
     #autor;
 
-    constructor(texto, autor) {
-        this.#id = Mensagem.proximoId++;
+    constructor(texto, autor, id = null) {
+        if (id === null) {
+            this.#id = Mensagem.proximoId++;
+        } else {
+            this.#id = id;
+            Mensagem.proximoId = Math.max(
+                Mensagem.proximoId,
+                id + 1
+            );
+        }
+
         this.#texto = texto;
         this.#autor = autor;
     }
@@ -27,6 +36,10 @@ export class Mensagem {
         return this.#autor;
     }
 
+    set autor(valor) {
+        this.#autor = valor;
+    }
+
     render() {
         const item = document.createElement("div");
         item.classList.add("mensagem");
@@ -36,7 +49,8 @@ export class Mensagem {
         texto.textContent = this.texto;
 
         const autor = document.createElement("small");
-        autor.textContent = `Autor: ${this.autor}`;
+        autor.textContent =
+            `Autor: ${this.autor.nome}`;
 
         const acoes = document.createElement("div");
         acoes.classList.add("acoes");

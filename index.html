@@ -2,61 +2,43 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Mensagens</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>Sistema de Mensagens</title>
     <link rel="stylesheet" href="css/estilo.css">
 </head>
 <body>
     <main>
         <header>
-            <h1>Mensagens</h1>
-            <button id="nova-mensagem">
-                Nova mensagem
-            </button>
+            <h1>Sistema de Mensagens</h1>
+            <p>Selecione um recurso para acessar.</p>
         </header>
 
-        <section id="lista-mensagens"></section>
+        <section class="recursos">
+            <a
+                href="mensagens.html"
+                class="card-recurso"
+            >
+                <h2>Mensagens</h2>
+                <p>
+                    Cadastre, altere e consulte as
+                    mensagens do sistema.
+                </p>
+            </a>
+
+            <a
+                href="autores.html"
+                class="card-recurso"
+            >
+                <h2>Autores</h2>
+                <p>
+                    Cadastre e altere os autores
+                    das mensagens.
+                </p>
+            </a>
+        </section>
     </main>
-
-    <dialog id="modal-mensagem">
-        <form id="form-mensagem">
-            <h2 id="titulo-formulario">
-                Nova mensagem
-            </h2>
-
-            <input
-                type="hidden"
-                id="mensagem-id"
-            >
-
-            <label for="mensagem-texto">
-                Mensagem:
-            </label>
-
-            <input
-                type="text"
-                id="mensagem-texto"
-                required
-            >
-
-            <div class="acoes">
-                <button type="submit">
-                    Salvar
-                </button>
-
-                <button
-                    type="button"
-                    id="cancelar-mensagem"
-                >
-                    Cancelar
-                </button>
-            </div>
-        </form>
-    </dialog>
-
-    <script
-        type="module"
-        src="js/script.js"
-    ></script>
 </body>
 </html>
