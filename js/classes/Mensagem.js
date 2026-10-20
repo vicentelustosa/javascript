@@ -39,45 +39,4 @@ export class Mensagem {
     set autor(valor) {
         this.#autor = valor;
     }
-
-    render() {
-        const item = document.createElement("div");
-        item.classList.add("mensagem");
-        item.dataset.id = this.id;
-
-        const texto = document.createElement("p");
-        texto.textContent = this.texto;
-
-        const autor = document.createElement("small");
-        autor.textContent =
-            `Autor: ${this.autor.nome}`;
-
-        const acoes = document.createElement("div");
-        acoes.classList.add("acoes");
-
-        const botaoAlterar =
-            document.createElement("button");
-
-        botaoAlterar.textContent = "Alterar";
-        botaoAlterar.dataset.acao = "alterar";
-
-        const botaoExcluir =
-            document.createElement("button");
-
-        botaoExcluir.textContent = "Excluir";
-        botaoExcluir.dataset.acao = "excluir";
-
-        acoes.append(
-            botaoAlterar,
-            botaoExcluir
-        );
-
-        item.append(
-            texto,
-            autor,
-            acoes
-        );
-
-        return item;
-    }
 }
