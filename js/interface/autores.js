@@ -1,6 +1,12 @@
-import { autores, salvarAutores } from "../dados/autores.js";
-import { mensagens } from "../dados/mensagens.js";
-import { Autor } from "../classes/Autor.js";
+
+import {
+    listarAutores,
+    criarAutor as cadastrarAutorNaAPI,
+    atualizarAutor as atualizarAutorNaAPI,
+    excluirAutor as excluirAutorNaAPI
+} from "../api/autores.js";
+
+import { listarMensagens } from "../api/mensagens.js";
 import { criarItemAutor } from "./componentes.js";
 
 const lista = document.querySelector("#lista-autores");
@@ -23,7 +29,9 @@ const estado = {
     modoFormulario: "cadastro"
 };
 
-function renderizarAutores() {
+async function renderizarAutores() {
+    const autores = await listarAutores();
+
     lista.innerHTML = "";
 
     for (const autor of autores) {
@@ -64,71 +72,73 @@ function abrirFormularioAlteracao(autor) {
     modal.showModal();
 }
 
-function criarAutor(nome, email) {
-    const autor = new Autor(nome, email);
-
-    autores.push(autor);
-    salvarAutores();
-    renderizarAutores();
+async function criarAutor(nome, email) {
+    await cadastrarAutorNaAPI({ nome, email });
+    await renderizarAutores();
 }
 
-function alterarAutor(autor, nome, email) {
-    if (!autor || !autores.includes(autor)) {
+async function alterarAutor(autor, nome, email) {
+    if (!autor) {
         return;
     }
 
-    autor.nome = nome;
-    autor.email = email;
-
-    salvarAutores();
-    renderizarAutores();
-}
-
-function excluirAutor(id) {
-    const possuiMensagens = mensagens.some(
-        mensagem => mensagem.autor.id === id
+    await atualizarAutorNaAPI(
+        autor.id,
+        { nome, email }
     );
 
-    if (possuiMensagens) {
-        alert(
-            "Não é possível excluir este autor porque existem mensagens associadas."
+    await renderizarAutores();
+}
+
+async function excluirAutor(id) {
+    try {
+        const mensagens = await listarMensagens();
+
+        const possuiMensagens = mensagens.some(
+            mensagem =>
+                String(mensagem.autorId) === String(id)
         );
-        return;
+
+        if (possuiMensagens) {
+            alert(
+                "Não é possível excluir este autor porque " +
+                "existem mensagens associadas."
+            );
+            return;
+        }
+
+        await excluirAutorNaAPI(id);
+        await renderizarAutores();
+    } catch (erro) {
+        console.error("Erro ao excluir autor:", erro);
+        alert("Não foi possível excluir o autor.");
     }
-
-    const indice = autores.findIndex(
-        autor => autor.id === id
-    );
-
-    if (indice === -1) {
-        return;
-    }
-
-    autores.splice(indice, 1);
-
-    salvarAutores();
-    renderizarAutores();
 }
 
-formulario.addEventListener("submit", evento => {
+formulario.addEventListener("submit", async evento => {
     evento.preventDefault();
 
     const nome = campoNome.value;
     const email = campoEmail.value;
 
-    if (estado.modoFormulario === "alteracao") {
-        alterarAutor(
-            estado.autorSelecionado,
-            nome,
-            email
-        );
-    } else {
-        criarAutor(nome, email);
-    }
+    try {
+        if (estado.modoFormulario === "alteracao") {
+            await alterarAutor(
+                estado.autorSelecionado,
+                nome,
+                email
+            );
+        } else {
+            await criarAutor(nome, email);
+        }
 
-    formulario.reset();
-    prepararCadastro();
-    modal.close();
+        formulario.reset();
+        prepararCadastro();
+        modal.close();
+    } catch (erro) {
+        console.error("Erro ao salvar autor:", erro);
+        alert("Não foi possível salvar o autor.");
+    }
 });
 
 botaoNovo.addEventListener(
@@ -142,6 +152,11 @@ botaoCancelar.addEventListener("click", () => {
     modal.close();
 });
 
-export function inicializar() {
-    renderizarAutores();
+export async function inicializar() {
+    try {
+        await renderizarAutores();
+    } catch (erro) {
+        console.error("Erro ao carregar autores:", erro);
+        alert("Não foi possível carregar os autores.");
+    }
 }

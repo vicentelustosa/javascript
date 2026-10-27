@@ -1,10 +1,15 @@
-import {
-    mensagens,
-    salvarMensagens
-} from "../dados/mensagens.js";
 
-import { autores } from "../dados/autores.js";
-import { Mensagem } from "../classes/Mensagem.js";
+import {
+    listarAutores
+} from "../api/autores.js";
+
+import {
+    listarMensagens,
+    criarMensagem as cadastrarMensagemNaAPI,
+    atualizarMensagem as atualizarMensagemNaAPI,
+    excluirMensagem as excluirMensagemNaAPI
+} from "../api/mensagens.js";
+
 import { criarItemMensagem } from "./componentes.js";
 
 const lista = document.querySelector("#lista-mensagens");
@@ -27,7 +32,11 @@ const estado = {
     modoFormulario: "cadastro"
 };
 
-function carregarAutores() {
+let autores = [];
+
+async function carregarAutores() {
+    autores = await listarAutores();
+
     campoAutor.innerHTML = "";
 
     const opcaoInicial = document.createElement("option");
@@ -46,12 +55,28 @@ function carregarAutores() {
     }
 }
 
-function renderizarMensagens() {
+function associarAutor(mensagem) {
+    const autor = autores.find(
+        autor =>
+            String(autor.id) === String(mensagem.autorId)
+    );
+
+    return {
+        ...mensagem,
+        autor: autor ?? { nome: "Autor não encontrado" }
+    };
+}
+
+async function renderizarMensagens() {
+    const mensagens = await listarMensagens();
+
     lista.innerHTML = "";
 
     for (const mensagem of mensagens) {
+        const mensagemComAutor = associarAutor(mensagem);
+
         const item = criarItemMensagem(
-            mensagem,
+            mensagemComAutor,
             () => abrirFormularioAlteracao(mensagem),
             () => excluirMensagem(mensagem.id)
         );
@@ -82,74 +107,76 @@ function abrirFormularioAlteracao(mensagem) {
     tituloFormulario.textContent = "Alterar mensagem";
     campoId.value = mensagem.id;
     campoTexto.value = mensagem.texto;
-    campoAutor.value = mensagem.autor.id;
+    campoAutor.value = mensagem.autorId;
 
     modal.showModal();
 }
 
-function criarMensagem(texto, autor) {
-    const mensagem = new Mensagem(texto, autor);
+async function criarMensagem(texto, autorId) {
+    await cadastrarMensagemNaAPI({
+        texto,
+        autorId
+    });
 
-    mensagens.push(mensagem);
-    salvarMensagens();
-    renderizarMensagens();
+    await renderizarMensagens();
 }
 
-function alterarMensagem(mensagem, texto, autor) {
-    if (!mensagem || !mensagens.includes(mensagem)) {
+async function alterarMensagem(mensagem, texto, autorId) {
+    if (!mensagem) {
         return;
     }
 
-    mensagem.texto = texto;
-    mensagem.autor = autor;
-
-    salvarMensagens();
-    renderizarMensagens();
-}
-
-function excluirMensagem(id) {
-    const indice = mensagens.findIndex(
-        mensagem => mensagem.id === id
+    await atualizarMensagemNaAPI(
+        mensagem.id,
+        { texto, autorId }
     );
 
-    if (indice === -1) {
-        return;
-    }
-
-    mensagens.splice(indice, 1);
-
-    salvarMensagens();
-    renderizarMensagens();
+    await renderizarMensagens();
 }
 
-formulario.addEventListener("submit", evento => {
+async function excluirMensagem(id) {
+    try {
+        await excluirMensagemNaAPI(id);
+        await renderizarMensagens();
+    } catch (erro) {
+        console.error("Erro ao excluir mensagem:", erro);
+        alert("Não foi possível excluir a mensagem.");
+    }
+}
+
+formulario.addEventListener("submit", async evento => {
     evento.preventDefault();
 
     const texto = campoTexto.value;
-    const autorId = Number(campoAutor.value);
+    const autorId = campoAutor.value;
 
     const autor = autores.find(
-        autor => autor.id === autorId
+        autor => String(autor.id) === String(autorId)
     );
 
-    if (!autor) {
+    if (!autorId || !autor) {
         alert("Selecione um autor válido.");
         return;
     }
 
-    if (estado.modoFormulario === "alteracao") {
-        alterarMensagem(
-            estado.mensagemSelecionada,
-            texto,
-            autor
-        );
-    } else {
-        criarMensagem(texto, autor);
-    }
+    try {
+        if (estado.modoFormulario === "alteracao") {
+            await alterarMensagem(
+                estado.mensagemSelecionada,
+                texto,
+                autorId
+            );
+        } else {
+            await criarMensagem(texto, autorId);
+        }
 
-    formulario.reset();
-    prepararCadastro();
-    modal.close();
+        formulario.reset();
+        prepararCadastro();
+        modal.close();
+    } catch (erro) {
+        console.error("Erro ao salvar mensagem:", erro);
+        alert("Não foi possível salvar a mensagem.");
+    }
 });
 
 botaoNovo.addEventListener("click", abrirFormularioNovo);
@@ -160,7 +187,16 @@ botaoCancelar.addEventListener("click", () => {
     modal.close();
 });
 
-export function inicializar() {
-    carregarAutores();
-    renderizarMensagens();
+export async function inicializar() {
+    try {
+        await carregarAutores();
+        await renderizarMensagens();
+    } catch (erro) {
+        console.error(
+            "Erro ao inicializar mensagens:",
+            erro
+        );
+
+        alert("Não foi possível carregar as mensagens.");
+    }
 }
